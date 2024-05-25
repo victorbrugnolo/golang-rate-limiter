@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/victorbrugnolo/golang-rate-limiter/cmd/internal/entity"
-	"github.com/victorbrugnolo/golang-rate-limiter/cmd/internal/infra/web"
+	"github.com/victorbrugnolo/golang-rate-limiter/internal/entity"
+	"github.com/victorbrugnolo/golang-rate-limiter/internal/infra/web"
 )
 
 func endpointHandler(w http.ResponseWriter, r *http.Request) {
