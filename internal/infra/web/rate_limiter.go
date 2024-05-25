@@ -45,13 +45,13 @@ func (rl *RateLimiter) RateLimit(clientID string) bool {
 		return false
 	}
 
+	if time.Since(rl.LastSeen) > rl.Window {
+		fmt.Println("Resetting count")
+		delete(rl.Requests, clientID)
+	}
+
 	if count, exists := rl.Requests[clientID]; !exists || count < rl.Limit {
 		rl.LastSeen = time.Now()
-
-		if time.Since(rl.LastSeen) > rl.Window {
-			delete(rl.Requests, clientID)
-		}
-
 		rl.Requests[clientID]++
 		return true
 	}
