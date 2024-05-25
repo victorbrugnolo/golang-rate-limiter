@@ -9,7 +9,7 @@ import (
 	"github.com/victorbrugnolo/golang-rate-limiter/internal/entity"
 )
 
-type RateLimiter struct {
+type RateLimiterHandler struct {
 	Limit                     int
 	Window                    time.Duration
 	Mutex                     sync.Mutex
@@ -17,8 +17,8 @@ type RateLimiter struct {
 	RateLimiterDataRepository entity.RateLimiterDataRepositoryInterface
 }
 
-func NewRateLimiter(limit int, window time.Duration, blockWindow time.Duration, rateLimiterDataRepository entity.RateLimiterDataRepositoryInterface) *RateLimiter {
-	return &RateLimiter{
+func NewRateLimiter(limit int, window time.Duration, blockWindow time.Duration, rateLimiterDataRepository entity.RateLimiterDataRepositoryInterface) *RateLimiterHandler {
+	return &RateLimiterHandler{
 		Limit:                     limit,
 		Window:                    window,
 		Mutex:                     sync.Mutex{},
@@ -27,7 +27,7 @@ func NewRateLimiter(limit int, window time.Duration, blockWindow time.Duration, 
 	}
 }
 
-func (rl *RateLimiter) HandleRateLimit(ctx context.Context, clientID string) bool {
+func (rl *RateLimiterHandler) HandleRateLimit(ctx context.Context, clientID string) bool {
 	rl.Mutex.Lock()
 	defer rl.Mutex.Unlock()
 
