@@ -1,83 +1,73 @@
 package web
 
 import (
-	"fmt"
+	"context"
+	"log"
 	"sync"
 	"time"
+
+	"github.com/victorbrugnolo/golang-rate-limiter/internal/entity"
 )
 
 type RateLimiter struct {
-	Requests    map[string]int
-	Limit       int
-	Window      time.Duration
-	Mutex       sync.Mutex
-	LastSeen    time.Time
-	BlockWindow time.Duration
-	Blocked     bool
+	Limit                     int
+	Window                    time.Duration
+	Mutex                     sync.Mutex
+	BlockWindow               time.Duration
+	RateLimiterDataRepository entity.RateLimiterDataRepositoryInterface
 }
 
-func NewRateLimiter(limit int, window time.Duration, blockWindow time.Duration) *RateLimiter {
+func NewRateLimiter(limit int, window time.Duration, blockWindow time.Duration, rateLimiterDataRepository entity.RateLimiterDataRepositoryInterface) *RateLimiter {
 	return &RateLimiter{
-		Requests:    make(map[string]int),
-		Limit:       limit,
-		Window:      window,
-		Mutex:       sync.Mutex{},
-		LastSeen:    time.Now(),
-		BlockWindow: blockWindow,
-		Blocked:     false,
+		Limit:                     limit,
+		Window:                    window,
+		Mutex:                     sync.Mutex{},
+		BlockWindow:               blockWindow,
+		RateLimiterDataRepository: rateLimiterDataRepository,
 	}
 }
 
-func (rl *RateLimiter) RateLimit(clientID string) bool {
+func (rl *RateLimiter) HandleRateLimit(ctx context.Context, clientID string) bool {
 	rl.Mutex.Lock()
 	defer rl.Mutex.Unlock()
 
-	if rl.Blocked {
-		if time.Since(rl.LastSeen) > rl.BlockWindow {
-			rl.Blocked = false
-			delete(rl.Requests, clientID)
+	rateLimiterData, err := rl.RateLimiterDataRepository.Find(ctx, clientID)
 
-			rl.Requests[clientID]++
+	if err != nil {
+		log.Printf("Error on finding rate limiter data: %s\n", err)
+	}
+
+	if rateLimiterData.Blocked {
+		if time.Since(rateLimiterData.LastSeen) > rl.BlockWindow {
+			rateLimiterData.Blocked = false
+			rateLimiterData.LastSeen = time.Now()
+			rateLimiterData.Requests = 1
+
+			rl.RateLimiterDataRepository.Save(ctx, clientID, rateLimiterData)
 
 			return true
 
 		}
+
 		return false
 	}
 
-	if time.Since(rl.LastSeen) > rl.Window {
-		fmt.Println("Resetting count")
-		delete(rl.Requests, clientID)
+	if time.Since(rateLimiterData.LastSeen) > rl.Window {
+		rateLimiterData.Requests = 0
+
+		rl.RateLimiterDataRepository.Save(ctx, clientID, rateLimiterData)
 	}
 
-	if count, exists := rl.Requests[clientID]; !exists || count < rl.Limit {
-		rl.LastSeen = time.Now()
-		rl.Requests[clientID]++
+	if rateLimiterData.Requests < rl.Limit {
+		rateLimiterData.LastSeen = time.Now()
+		rateLimiterData.Requests++
+		rl.RateLimiterDataRepository.Save(ctx, clientID, rateLimiterData)
+
 		return true
 	}
 
+	rateLimiterData.Blocked = true
+	rl.RateLimiterDataRepository.Save(ctx, clientID, rateLimiterData)
+
 	return false
-}
-
-func (rl *RateLimiter) ResetCount(clientID string) {
-	for {
-		time.Sleep(rl.Window)
-
-		rl.Mutex.Lock()
-
-		if rl.Blocked {
-			fmt.Println(time.Since(rl.LastSeen))
-			fmt.Println(rl.BlockWindow)
-
-			if time.Since(rl.LastSeen) > rl.BlockWindow {
-				rl.Blocked = false
-				delete(rl.Requests, clientID)
-
-			}
-		} else {
-			delete(rl.Requests, clientID)
-		}
-
-		rl.Mutex.Unlock()
-	}
 }
