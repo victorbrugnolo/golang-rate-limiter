@@ -2,10 +2,14 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"net"
 	"net/http"
+	"os"
+	"strconv"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/victorbrugnolo/golang-rate-limiter/internal/entity"
 	"github.com/victorbrugnolo/golang-rate-limiter/internal/infra/web"
 )
@@ -61,10 +65,22 @@ func rateLimiterMiddleware(rateLimiter *web.RateLimiter, next func(w http.Respon
 }
 
 func main() {
-	rateLimiter := web.NewRateLimiter(2, 5*time.Second, 10*time.Second)
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file %s", string(err.Error()))
+	}
+
+	limit, _ := strconv.Atoi(os.Getenv("RATE_LIMITER_BY_IP_LIMIT"))
+	window, _ := strconv.Atoi(os.Getenv("RATE_LIMITER_BY_IP_WINDOW"))
+	blockWindow, _ := strconv.Atoi(os.Getenv("RATE_LIMITER_BY_IP_BLOCK_WINDOW"))
+
+	windowDuration := time.Duration(window) * time.Second
+	blockWindowDuration := time.Duration(blockWindow) * time.Second
+
+	rateLimiter := web.NewRateLimiter(limit, windowDuration, blockWindowDuration)
 
 	http.HandleFunc("/ping", rateLimiterMiddleware(rateLimiter, endpointHandler))
-	err := http.ListenAndServe(":8080", nil)
+	err = http.ListenAndServe(":8080", nil)
 
 	if err != nil {
 		panic(err)
