@@ -25,3 +25,12 @@ RATE_LIMITER_BY_TOKEN_tokenname_BLOCK_WINDOW=10
 ```
 
 _**You can determine the name of the token and configure as many as you want**_
+
+## Running
+```bash
+go mod tidy
+
+docker-compose up -d
+```
+
+The server will be running on port `8080`
