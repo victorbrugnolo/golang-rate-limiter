@@ -37,6 +37,11 @@ docker-compose up -d
 The server will be running on port `:8080`
 
 ## Tests
+### Automated tests:
+```bash
+go test ./...   
+```
+
 ### Test rate limiter by ip:
 ```bash
 bash bash/test_by_ip.bash   
