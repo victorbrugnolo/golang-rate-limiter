@@ -33,4 +33,4 @@ go mod tidy
 docker-compose up -d
 ```
 
-The server will be running on port `8080`
+The server will be running on port `:8080`
