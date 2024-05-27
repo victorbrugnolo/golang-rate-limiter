@@ -6,6 +6,7 @@ A way to protect your sever of attacks.
 - This rate limiter allows you to use two configuration methods: by IP or by token. 
 - If you send a token in the request, this token must be previously configured, otherwise you will receive an error response in the request.
 - Per-token settings will override IP settings.
+- Token must send in the request header on format `API_KEY=tokenname`
 
 ## Configuration
 All configurations must be made in the `.env` file in the project root, following this pattern:
@@ -34,3 +35,14 @@ docker-compose up -d
 ```
 
 The server will be running on port `:8080`
+
+## Tests
+### Test rate limiter by ip:
+```bash
+bash bash/test_by_ip.bash   
+```
+
+### Test rate limiter by token:
+```bash
+bash bash/test_by_token.bash 
+```
