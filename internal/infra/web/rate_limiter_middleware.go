@@ -41,7 +41,7 @@ func RateLimiterMiddleware(ctx context.Context, repository entity.RateLimiterDat
 			rateLimiterConfig = *getRateLimiterConfigByIP()
 		}
 
-		rateLimiterHandler := NewRateLimiter(&rateLimiterConfig, repository)
+		rateLimiterHandler := NewRateLimiterHandler(&rateLimiterConfig, repository)
 
 		if ok := rateLimiterHandler.HandleRateLimit(ctx, clientId); !ok {
 			buildErrorResponse(w, http.StatusTooManyRequests, "you have reached the maximum number of requests or actions allowed within a certain time frame")

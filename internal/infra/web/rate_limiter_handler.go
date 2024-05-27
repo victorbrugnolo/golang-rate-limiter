@@ -15,7 +15,7 @@ type RateLimiterHandler struct {
 	RateLimiterDataRepository entity.RateLimiterDataRepositoryInterface
 }
 
-func NewRateLimiter(config *entity.RateLimiterConfig, rateLimiterDataRepository entity.RateLimiterDataRepositoryInterface) *RateLimiterHandler {
+func NewRateLimiterHandler(config *entity.RateLimiterConfig, rateLimiterDataRepository entity.RateLimiterDataRepositoryInterface) *RateLimiterHandler {
 	return &RateLimiterHandler{
 		Config:                    config,
 		Mutex:                     sync.Mutex{},
@@ -31,6 +31,7 @@ func (rl *RateLimiterHandler) HandleRateLimit(ctx context.Context, clientID stri
 
 	if err != nil {
 		log.Printf("Error on finding rate limiter data: %s\n", err)
+		return false
 	}
 
 	if rateLimiterData.Blocked {
